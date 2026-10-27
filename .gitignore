@@ -147,3 +147,7 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Routines exported from the app itself — personal data, not source
+routine-*.json
+routine-*.ics

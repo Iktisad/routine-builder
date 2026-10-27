@@ -1,0 +1,784 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Theme tokens — modern, with a WhatsApp-style patterned backdrop.
+
+   The page carries a warm paper colour and a tiled doodle pattern; the grid
+   itself stays a clean white card floating on top. That separation matters:
+   the eight activity hues were validated against a near-white surface, and
+   because the pattern never sits behind a block, that validation still holds.
+
+   App chrome reads from these vars rather than Tailwind colour utilities so
+   that printing is a matter of redefining the vars once.
+   --------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light;
+
+  --page: #ece5dd;
+  --surface: #ffffff;
+  --surface-2: #f8f6f3;
+  --surface-3: #f0ece6;
+  /* Deliberately cool, so it never reads as the warm page behind the control. */
+  --hover: #e8eaef;
+  --text: #1b1917;
+  --text-muted: #6b6560;
+  --text-faint: #9d968e;
+  --border: #e8e4de;
+  --border-strong: #d6d0c8;
+  /* White on this clears 5.3:1, so the primary action stays readable. */
+  --accent: #c2410c;
+  --accent-hover: #9a3412;
+  --accent-soft: #fdf1e7;
+  --accent-text: #ffffff;
+  --danger: #b4231c;
+  --grid-hour-line: #e9e5df;
+  --grid-slot-line: #f4f1ec;
+  --now-line: #e11d48;
+
+  --shadow-card: 0 1px 2px rgb(17 19 23 / 0.05), 0 12px 32px rgb(17 19 23 / 0.08);
+  --shadow-block: 0 1px 2px rgb(17 19 23 / 0.07);
+  --shadow-pop: 0 12px 48px rgb(17 19 23 / 0.22);
+
+  /* Vertical scale. One hour of the day is this tall. */
+  --hour-px: 56px;
+  /* Overridden per-grid by the fit-to-height scale; see .week-grid. */
+  /* Minimum width of a day column before the grid scrolls sideways. */
+  --day-min: 7rem;
+  /* Collapses to 0 while the grid is bare — see .week-grid. */
+  --gutter-w: 4.25rem;
+
+  --c-blue-bg:   #eaf3ff;  --c-blue-border:   #285598;  --c-blue-text:   #294875;
+  --c-violet-bg: #f1f0ff;  --c-violet-border: #8077bd;  --c-violet-text: #473f72;
+  --c-rose-bg:   #fcedf9;  --c-rose-border:   #7c3275;  --c-rose-text:   #61355c;
+  --c-orange-bg: #ffedeb;  --c-orange-border: #cb6760;  --c-orange-text: #6e332f;
+  --c-amber-bg:  #ffefe6;  --c-amber-border:  #8c4208;  --c-amber-text:  #6b3818;
+  --c-lime-bg:   #f3f4e3;  --c-lime-border:   #7e8006;  --c-lime-text:   #4a4b05;
+  --c-teal-bg:   #e7f7ed;  --c-teal-border:   #096742;  --c-teal-text:   #0d5537;
+  --c-cyan-bg:   #e3f8f5;  --c-cyan-border:   #159e93;  --c-cyan-text:   #00564e;
+
+  --doodle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='280' viewBox='0 0 280 280'%3E%3Cg fill='none' stroke='%236b5b4e' stroke-opacity='0.16' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='translate(121.0 210.4) rotate(3.1) scale(1.48) translate(-12 -12)'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Cpath d='M12 7v5l3 2'/%3E%3C/g%3E%3Cg transform='translate(157.3 148.2) rotate(-14.1) scale(1.54) translate(-12 -12)'%3E%3Cpath d='M4 6c3-1 5-1 8 1 3-2 5-2 8-1v11c-3-1-5-1-8 1-3-2-5-2-8-1z'/%3E%3Cpath d='M12 7v12'/%3E%3C/g%3E%3Cg transform='translate(203.0 203.6) rotate(26.3) scale(1.31) translate(-12 -12)'%3E%3Cpath d='M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10'/%3E%3C/g%3E%3Cg transform='translate(49.7 106.1) rotate(-19.8) scale(1.16) translate(-12 -12)'%3E%3Cpath d='M5 10h12v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5z'/%3E%3Cpath d='M17 11h2a2 2 0 0 1 0 4h-2'/%3E%3Cpath d='M9 6V4M13 6V4'/%3E%3C/g%3E%3Cg transform='translate(56.5 229.8) rotate(19.8) scale(1.35) translate(-12 -12)'%3E%3Cpath d='M10 18V6l8-2v12'/%3E%3Ccircle cx='8' cy='18' r='2.4'/%3E%3Ccircle cx='16' cy='16' r='2.4'/%3E%3C/g%3E%3Cg transform='translate(37.4 48.7) rotate(8.6) scale(1.25) translate(-12 -12)'%3E%3Cpath d='M12 20c0-7 3-11 8-12-1 8-4 11-8 12z'/%3E%3Cpath d='M12 20c0-5-2-8-6-9 1 6 3 8 6 9z'/%3E%3C/g%3E%3Cg transform='translate(157.6 86.3) rotate(9.4) scale(1.06) translate(-12 -12)'%3E%3Cpath d='M5 19l1-4L16 5l3 3L9 18z'/%3E%3Cpath d='M14 7l3 3'/%3E%3C/g%3E%3Cg transform='translate(96.8 30.0) rotate(-7.7) scale(1.35) translate(-12 -12)'%3E%3Crect x='5' y='6' width='14' height='9' rx='1'/%3E%3Cpath d='M3 18h18'/%3E%3C/g%3E%3Cg transform='translate(247.0 251.2) rotate(-12.2) scale(1.28) translate(-12 -12)'%3E%3Ccircle cx='12' cy='12' r='4.5'/%3E%3Cpath d='M12 3v2M12 19v2M3 12h2M19 12h2M5.5 5.5l1.5 1.5M17 17l1.5 1.5M18.5 5.5L17 7M7 17l-1.5 1.5'/%3E%3C/g%3E%3Cg transform='translate(252.8 133.0) rotate(-22.6) scale(1.34) translate(-12 -12)'%3E%3Cpath d='M18 14A7 7 0 0 1 10 6a7 7 0 1 0 8 8z'/%3E%3C/g%3E%3Cg transform='translate(184.0 36.2) rotate(-0.1) scale(1.35) translate(-12 -12)'%3E%3Crect x='4' y='6' width='16' height='14' rx='2'/%3E%3Cpath d='M4 11h16M9 4v4M15 4v4'/%3E%3C/g%3E%3Cg transform='translate(68.4 160.3) rotate(-4.2) scale(1.37) translate(-12 -12)'%3E%3Cpath d='M12 4c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z'/%3E%3C/g%3E%3Cg transform='translate(237.5 71.3) rotate(-20.9) scale(1.27) translate(-12 -12)'%3E%3Cpath d='M7 5h9v6a4.5 4.5 0 0 1-9 0z'/%3E%3Cpath d='M6 20h11'/%3E%3C/g%3E%3Cg transform='translate(171.1 249.2) rotate(-2.9) scale(1.1) translate(-12 -12)'%3E%3Cpath d='M12 4l2.4 5.2 5.6.7-4.1 3.9 1.1 5.6L12 16.7 6.9 19.4 8 13.8 3.9 9.9l5.7-.7z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  margin: 0;
+  background-color: var(--page);
+  background-image: var(--doodle);
+  background-repeat: repeat;
+  background-size: 190px 190px;
+  background-attachment: fixed;
+  color: var(--text);
+  font-family: "Inter var", Inter, ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "cv05", "ss01";
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.006em;
+}
+
+/* ---------------------------------------------------------------------------
+   Controls
+   --------------------------------------------------------------------------- */
+
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.42rem 0.8rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.8125rem;
+    font-weight: 550;
+    line-height: 1.2;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 1px rgb(17 19 23 / 0.04);
+    transition: background-color 130ms ease, border-color 130ms ease, box-shadow 130ms ease;
+  }
+  .btn:hover:not(:disabled) { background: var(--hover); box-shadow: 0 2px 6px rgb(17 19 23 / 0.08); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 1px 2px rgb(79 70 229 / 0.35);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+  .btn-danger { color: var(--danger); }
+  .btn-danger:hover:not(:disabled) { border-color: var(--danger); background: var(--surface); }
+
+  .field {
+    width: 100%;
+    padding: 0.42rem 0.6rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.8125rem;
+  }
+  .field::placeholder { color: var(--text-faint); }
+  .field:disabled { opacity: 0.45; cursor: not-allowed; background: var(--surface-2); }
+
+  .label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  /* All actions live in one segmented pill rather than a row of chips. */
+  .btn-pill {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: stretch;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    box-shadow: 0 1px 2px rgb(27 25 23 / 0.05);
+  }
+
+  /* Was handled by overflow:hidden, which now has to go so dropdowns can
+     escape the pill. Round the end children directly instead. */
+  .btn-pill > :first-child,
+  .btn-pill > :first-child .pill-btn {
+    border-top-left-radius: 999px;
+    border-bottom-left-radius: 999px;
+  }
+  .btn-pill > :last-child,
+  .btn-pill > :last-child .pill-btn {
+    border-top-right-radius: 999px;
+    border-bottom-right-radius: 999px;
+  }
+  .btn-pill > :first-child .pill-btn { padding-left: 1rem; }
+  .btn-pill > :last-child .pill-btn { padding-right: 1rem; }
+
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    /* Tuned so the pill stands exactly as tall as the name field beside it. */
+    padding: 0.72rem 0.85rem;
+    border: 0;
+    border-left: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 550;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 130ms ease, color 130ms ease;
+  }
+
+  .pill-btn:first-child { border-left: 0; }
+  .pill-btn:hover:not(:disabled) { background: var(--hover); color: var(--text); }
+  .pill-btn:disabled { opacity: 0.38; cursor: not-allowed; }
+  .pill-btn[aria-pressed='true'] { background: var(--accent-soft); color: var(--accent); }
+
+  .pill-accent { color: var(--accent); font-weight: 650; }
+  .pill-accent:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent-hover); }
+  .pill-danger:hover:not(:disabled) { background: #fdf0ef; color: var(--danger); }
+
+  /* No surface of its own — the name field and the action pill each carry
+     their own, so the patterned page shows through between them. */
+  .toolbar-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  /* Sits directly on the patterned page, so it needs more weight than the
+     faint ink used inside bordered surfaces. */
+  .save-state {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--text-muted);
+  }
+  .save-state[data-dirty='true'] { color: var(--accent); }
+
+  .panel {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+  }
+
+  .chip {
+    padding: 0.26rem 0.65rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 550;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: background-color 130ms ease, border-color 130ms ease, color 130ms ease;
+  }
+  .chip:hover:not(:disabled) { border-color: var(--text-faint); }
+  .chip[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+  .chip:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+:where(.btn, .field, .chip, .swatch, .activity-block):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.routine-name {
+  flex: 0 1 18rem;
+  width: auto;
+  min-width: 8rem;
+  border-radius: 999px;
+  padding-left: 0.95rem;
+  padding-right: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  padding: 0.46rem 0.7rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Week grid — a white card floating on the patterned page
+   --------------------------------------------------------------------------- */
+
+.grid-scroll {
+  height: auto;
+  max-height: 100%;
+  overflow: auto;
+  /* Reserve the vertical scrollbar so its appearing cannot flip the width,
+     and with it the horizontal scrollbar the fit calculation measures. */
+  scrollbar-gutter: stable;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+
+.week-grid {
+  /* Scaled to fit the viewport; falls back to the comfortable default. */
+  --hour-px: var(--fit-hour-px, 56px);
+  display: grid;
+  grid-template-columns: var(--gutter-w) repeat(var(--day-count), minmax(var(--day-min), 1fr));
+  min-width: min-content;
+}
+
+.grid-corner,
+.day-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.grid-corner { left: 0; z-index: 4; }
+
+.day-head {
+  padding: 0.65rem 0.25rem 0.55rem;
+  text-align: center;
+  border-left: 1px solid var(--border);
+}
+
+.day-head-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.day-head-count {
+  margin-top: 0.1rem;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+.day-head[data-today='true'] { box-shadow: inset 0 -2px 0 var(--accent); }
+.day-head[data-today='true'] .day-head-name { color: var(--accent); }
+
+.time-gutter {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  height: calc(var(--span-hours) * var(--hour-px));
+  background: var(--surface);
+}
+
+.time-gutter:not(:empty) { border-right: 1px solid var(--border); }
+
+.time-label {
+  position: absolute;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* The first and last labels are centred on rules at the very edges, so half of
+   each would fall outside the grid — the top one behind the sticky header, the
+   bottom one past the end, inflating scrollHeight by half a line. Anchor them
+   inward instead. */
+.time-label[data-first='true'] { transform: translateY(0); }
+.time-label[data-last='true'] { transform: translateY(-100%); }
+
+.day-column {
+  position: relative;
+  height: calc(var(--span-hours) * var(--hour-px));
+  border-left: 1px solid var(--border);
+  touch-action: none;
+}
+
+/* Rules are drawn only at labelled boundaries — see DayColumn. */
+.tick-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px solid var(--grid-hour-line);
+  pointer-events: none;
+}
+
+/* A stretch of time with nothing in it, shown shortened. */
+.gap-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--grid-slot-line) 0 5px,
+    transparent 5px 10px
+  );
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.gap-label {
+  position: absolute;
+  top: 50%;
+  left: 0.4rem;
+  transform: translateY(-50%);
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-faint);
+  font-size: 0.625rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.day-column[data-weekend='true'] { background-color: #fafbfc; }
+
+.now-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1.5px solid var(--now-line);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.now-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--now-line);
+}
+
+.block-slot {
+  position: absolute;
+  /* Overlapping activities nest: each level steps in from both sides, so a
+     clash reads as one card lying across another. */
+  left: calc(var(--depth, 0) * 10px);
+  right: calc(var(--depth, 0) * 10px + 3px);
+  box-sizing: border-box;
+  container-type: size;
+}
+
+/* Soft card with an accent spine — reads as a bubble on the canvas. */
+.activity-block {
+  /* A <button> centres its content vertically, which drops the title into the
+     middle of a tall card — exactly where a nested card covers it. Top-align
+     so titles line up across cards and stay clear of anything nested inside. */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0.28rem 0.45rem;
+  border: 0;
+  border-left: 3px solid;
+  border-radius: 2px;
+  text-align: left;
+  font: inherit;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: var(--shadow-block);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.activity-block[data-dragging='true'] {
+  cursor: grabbing;
+  opacity: 0.85;
+  box-shadow: var(--shadow-pop);
+}
+
+.activity-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.008em;
+}
+
+.activity-meta {
+  font-size: 0.6875rem;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+
+/* Short blocks shed detail rather than clipping text mid-glyph. Container
+   queries rather than a duration prop, so this also adapts when print shrinks
+   the hour scale and every block gets shorter. */
+@container (max-height: 48px) { .activity-place { display: none; } }
+@container (max-height: 34px) { .activity-meta { display: none; } }
+@container (max-height: 22px) {
+  .activity-block { padding-top: 0.04rem; padding-bottom: 0; }
+  .activity-title {
+    font-size: 0.6875rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+@container (max-height: 15px) {
+  .activity-block { padding: 0 0.3rem; }
+  .activity-title { font-size: 0.625rem; line-height: 1; }
+}
+
+.resize-handle {
+  position: absolute;
+  left: 0;
+  right: 3px;
+  bottom: 0;
+  height: 7px;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.create-preview {
+  position: absolute;
+  border: 1.5px dashed var(--accent);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ---------------------------------------------------------------------------
+   Messages & modal sheets
+   --------------------------------------------------------------------------- */
+
+.msg {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow-block);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.msg[data-tone='warn'] { border-left-color: var(--c-amber-border); }
+.msg[data-tone='error'] { border-left-color: var(--danger); color: var(--danger); }
+
+dialog.sheet {
+  /* Native <dialog> centres itself with margin:auto, which Tailwind's preflight
+     reset zeroes out. */
+  margin: auto;
+  padding: 0;
+  width: calc(100vw - 2rem);
+  max-width: 29rem;
+  max-height: calc(100vh - 2rem);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-pop);
+}
+
+dialog.sheet::backdrop { background: rgb(17 19 23 / 0.38); }
+
+.sheet-title {
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+
+.swatch {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: var(--text);
+  box-shadow: inset 0 0 0 2px var(--surface);
+}
+
+/* ---------------------------------------------------------------------------
+   Print — one landscape page, no pattern.
+
+   `--hour-px` is redefined on the grid, and the grid's height is expressed in
+   terms of it, so the whole day compresses to fit with no JS measuring.
+   --------------------------------------------------------------------------- */
+
+.print-only { display: none; }
+
+@media print {
+  @page { size: A4 landscape; margin: 10mm; }
+
+  :root {
+    --day-min: 0;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --surface-3: #ffffff;
+    --hover: #ffffff;
+    --border: #d2d7de;
+    --border-strong: #aab2bd;
+    --grid-hour-line: #d8dce2;
+    --grid-slot-line: #f0f2f5;
+    --shadow-card: none;
+    --shadow-block: none;
+  }
+
+  body {
+    background-color: #ffffff;
+    background-image: none;
+  }
+
+  .week-grid { --hour-px: var(--print-hour-px, 34px); }
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+
+  .app-shell { padding: 0 !important; height: auto !important; }
+  .grid-scroll { overflow: visible; height: auto; border: none; border-radius: 0; box-shadow: none; }
+  .day-column[data-weekend='true'] { background-color: #fbfcfd; }
+  .now-line, .resize-handle { display: none; }
+  .activity-block { cursor: default; break-inside: avoid; box-shadow: none; }
+  :focus-visible { outline: none !important; }
+  dialog.sheet { display: none !important; }
+}
+
+/* ---------------------------------------------------------------------------
+   Toast — a compact notification, not a full-width bar. Auto-dismisses.
+   --------------------------------------------------------------------------- */
+
+.toast-layer {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 24rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 6px 24px rgb(27 25 23 / 0.16), 0 1px 2px rgb(27 25 23 / 0.08);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: toast-in 180ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
+.toast-icon {
+  display: flex;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--text-faint);
+}
+
+.toast[data-tone='info'] .toast-icon { color: #15803d; }
+.toast[data-tone='warn'] .toast-icon { color: var(--accent); }
+.toast[data-tone='error'] .toast-icon { color: var(--danger); }
+
+.toast-body { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+
+.toast-title {
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+  color: var(--text);
+}
+
+.toast-text {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* ---------------------------------------------------------------------------
+   Dropdown menus — overlay the page rather than taking part in layout, so
+   opening one never reflows the calendar.
+   --------------------------------------------------------------------------- */
+
+.menu-anchor { position: relative; display: flex; }
+
+.menu-caret {
+  width: 0;
+  height: 0;
+  margin-left: 0.1rem;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-top: 4px solid currentColor;
+  opacity: 0.55;
+}
+
+.menu-popover {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 60;
+  max-width: calc(100vw - 2rem);
+  padding: 0.3rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 10px 34px rgb(27 25 23 / 0.17), 0 1px 2px rgb(27 25 23 / 0.08);
+  animation: menu-in 130ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-popover { animation: none; }
+}
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.55rem 0.6rem;
+}
+
+.menu-section + .menu-section { border-top: 1px solid var(--border); }
+
+.menu-heading {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.menu-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.menu-warn {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--danger);
+}
+
+.menu-row { display: flex; gap: 0.5rem; }
+.menu-row > * { flex: 1; min-width: 0; }
+.menu-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.5rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 550;
+  text-align: left;
+  cursor: pointer;
+}
+
+.menu-item:hover:not(:disabled) { background: var(--hover); }
+.menu-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.menu-item-primary {
+  justify-content: center;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 650;
+}
+.menu-item-primary:hover:not(:disabled) { background: var(--accent-hover); }
+
+.menu-shortcut {
+  margin-left: auto;
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+@media print { .menu-popover { display: none !important; } }
