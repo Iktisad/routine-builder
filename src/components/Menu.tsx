@@ -6,6 +6,8 @@ interface Props {
   /** Rendered with `close` so an item can dismiss the menu after acting. */
   children: (close: () => void) => ReactNode
   title?: string
+  /** Names the trigger when its label is visually hidden on phones. */
+  ariaLabel?: string
   disabled?: boolean
   /** Wider popovers (the Hours panel) need more room than a short item list. */
   width?: number
@@ -17,7 +19,7 @@ interface Props {
  * Deliberately overlays the page rather than taking part in layout — the
  * settings panel used to render inline and shoved the whole calendar down.
  */
-export default function Menu({ label, children, title, disabled, width = 15 }: Props) {
+export default function Menu({ label, children, title, ariaLabel, disabled, width = 15 }: Props) {
   const [open, setOpen] = useState(false)
   const anchorRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
@@ -55,6 +57,7 @@ export default function Menu({ label, children, title, disabled, width = 15 }: P
         type="button"
         className="pill-btn"
         title={title}
+        aria-label={ariaLabel}
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}

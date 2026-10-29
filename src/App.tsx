@@ -296,18 +296,10 @@ export default function App() {
         </div>
       ) : null}
 
-      {routine.activities.length === 0 ? (
-        <div className="msg no-print" data-tone="info">
-          <span className="flex-1">
-            Drag anywhere on the grid to block out your first activity, or use{' '}
-            <strong>+ Activity</strong>. Nothing is stored in your browser — use{' '}
-            <strong>Export</strong> to keep a routine.
-          </span>
-          <button type="button" className="btn" onClick={handleLoadSample}>Load sample week</button>
-        </div>
-      ) : null}
-
-      <main className="min-h-0 flex-1">
+      {/* The hint floats over the canvas rather than stacking above it: as a
+          sibling it occupied real height, so the grid grew when it vanished on
+          the first activity — the last of the jump users complained about. */}
+      <main className="relative min-h-0 flex-1">
         <WeekGrid
           routine={routine}
           range={range}
@@ -316,6 +308,19 @@ export default function App() {
           onChangeActivity={(activity) => dispatch({ type: 'updateActivity', activity })}
           onDeleteActivity={handleDeleteActivity}
         />
+
+        {routine.activities.length === 0 ? (
+          <div className="empty-hint no-print">
+            <div className="empty-hint-card">
+              <p className="empty-hint-text">
+                Drag anywhere on the grid to block out your first activity, or use{' '}
+                <strong>+ Activity</strong>. Nothing is stored in your browser — use{' '}
+                <strong>Share</strong> to keep a routine.
+              </p>
+              <button type="button" className="btn" onClick={handleLoadSample}>Load sample week</button>
+            </div>
+          </div>
+        ) : null}
       </main>
 
       {editor ? (

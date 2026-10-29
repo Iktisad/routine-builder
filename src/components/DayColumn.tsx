@@ -19,6 +19,7 @@ interface Props {
   draggingId: string | null
   registerRef: (day: DayIndex, element: HTMLDivElement | null) => void
   onBackgroundPointerDown: (day: DayIndex, event: PointerEvent<HTMLDivElement>) => void
+  onBackgroundPointerUp: (event: PointerEvent<HTMLDivElement>) => void
   onBlockPointerDown: (activity: Activity, mode: DragMode, event: PointerEvent<HTMLElement>) => void
   onBlockKeyDown: (activity: Activity, event: KeyboardEvent<HTMLElement>) => void
 }
@@ -33,6 +34,7 @@ export default function DayColumn({
   draggingId,
   registerRef,
   onBackgroundPointerDown,
+  onBackgroundPointerUp,
   onBlockPointerDown,
   onBlockKeyDown,
 }: Props) {
@@ -43,6 +45,7 @@ export default function DayColumn({
       data-weekend={day === 5 || day === 6}
       data-bare={bare}
       onPointerDown={(event) => onBackgroundPointerDown(day, event)}
+      onPointerUp={onBackgroundPointerUp}
     >
       {/* Rules sit only at labelled boundaries — the axis is not uniform, so a
           repeating gradient can no longer draw them. */}

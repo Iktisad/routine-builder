@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, KeyboardEvent, PointerEvent } from 'react'
 import { buildAxis, projectMinute, unprojectFraction } from '../lib/axis'
+import { hourHeightFor } from '../lib/fit'
+import { isTap } from '../lib/gesture'
 import { layoutDay } from '../lib/layout'
 import { createId } from '../lib/schema'
 import { MINUTES_IN_DAY, clampMinutes, floorToSlot, nowMinutes, snapMinutes } from '../lib/time'
@@ -43,11 +45,6 @@ interface Preview {
   start: number
   end: number
 }
-
-/** Vertical scale bounds. Below the minimum a 30-minute card stops being legible. */
-const MIN_HOUR_PX = 26
-const MAX_HOUR_PX = 56
-const DEFAULT_HOUR_PX = 56
 
 /** The drag-out range, snapped, and never shorter than one slot. */
 function rangeFromDrag(anchor: number, current: number, slot: number) {
@@ -133,12 +130,15 @@ export default function WeekGrid({
     return () => observer.disconnect()
   }, [measure])
 
-  const fitHourPx = useMemo(() => {
-    if (availableHeight <= 0 || axis.totalUnits <= 0) return DEFAULT_HOUR_PX
-    const forColumns = availableHeight - headerHeight - chromeHeight
-    const ideal = forColumns / axis.totalUnits
-    return Math.max(MIN_HOUR_PX, Math.min(MAX_HOUR_PX, ideal))
-  }, [availableHeight, headerHeight, chromeHeight, axis.totalUnits])
+  const fitHourPx = useMemo(
+    () => hourHeightFor({
+      available: availableHeight,
+      header: headerHeight,
+      chrome: chromeHeight,
+      units: axis.totalUnits,
+    }),
+    [availableHeight, headerHeight, chromeHeight, axis.totalUnits],
+  )
 
   // Adding activities changes the grid's height without changing the host's,
   // so the observer never fires. Re-measure after the browser has laid the new
@@ -196,6 +196,13 @@ export default function WeekGrid({
       // Blocks sit above the column and bubble their pointerdown up here; only
       // a press on bare column background should start a new activity.
       if (event.button !== 0 || event.target !== event.currentTarget) return
+
+      // On touch a swipe has to scroll the grid, so dragging out a range is
+      // mouse-only. Remember where the finger landed and decide on pointerup.
+      if (event.pointerType === 'touch') {
+        tapRef.current = { day, x: event.clientX, y: event.clientY, at: Date.now() }
+        return
+      }
       event.preventDefault()
 
       const anchor = clampMinutes(
@@ -220,6 +227,36 @@ export default function WeekGrid({
       setDragging(true)
     },
     [minuteAt, slotMinutes],
+  )
+
+  /** Where a touch landed on empty grid, pending the pointerup verdict. */
+  const tapRef = useRef<{ day: DayIndex; x: number; y: number; at: number } | null>(null)
+
+  const handleBackgroundPointerUp = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const tap = tapRef.current
+      tapRef.current = null
+      if (!tap || event.pointerType !== 'touch') return
+      if (!isTap({ dx: event.clientX - tap.x, dy: event.clientY - tap.y, elapsed: Date.now() - tap.at })) {
+        return
+      }
+
+      // A tap blocks out an hour at that time; the editor opens to adjust it.
+      const start = clampMinutes(
+        floorToSlot(minuteAt(tap.day, event.clientY), slotMinutes),
+        0,
+        MINUTES_IN_DAY - slotMinutes,
+      )
+      onRequestCreate({
+        id: createId(),
+        title: '',
+        day: tap.day,
+        start,
+        end: Math.min(start + 60, MINUTES_IN_DAY),
+        color: 'blue',
+      })
+    },
+    [minuteAt, slotMinutes, onRequestCreate],
   )
 
   const handleBlockPointerDown = useCallback(
@@ -414,7 +451,9 @@ export default function WeekGrid({
   const gridStyle = {
     '--day-count': days.length,
     '--span-hours': axis.totalUnits,
-    '--gutter-w': bare ? '0rem' : '4.25rem',
+    // Constant: collapsing this to 0 while bare slid every column sideways
+    // the moment the first activity landed. TimeGutter still renders nothing.
+    '--gutter-w': '4.25rem',
     // Read through a separate var: an inline --hour-px would outrank the
     // print stylesheet and break page fitting.
     '--fit-hour-px': `${fitHourPx}px`,
@@ -460,6 +499,7 @@ export default function WeekGrid({
             draggingId={preview?.activityId ?? null}
             registerRef={registerRef}
             onBackgroundPointerDown={handleBackgroundPointerDown}
+            onBackgroundPointerUp={handleBackgroundPointerUp}
             onBlockPointerDown={handleBlockPointerDown}
             onBlockKeyDown={handleBlockKeyDown}
           />

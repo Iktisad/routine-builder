@@ -99,7 +99,7 @@ export default function ActivityDialog({ mode, activity, onSave, onDelete, onClo
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="dialog-times grid grid-cols-3 gap-2">
           <div>
             <label className="label" htmlFor="activity-day">Day</label>
             <select

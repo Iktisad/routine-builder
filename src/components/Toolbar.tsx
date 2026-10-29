@@ -68,11 +68,11 @@ export default function Toolbar({
       </span>
 
       <div className="btn-pill" role="group" aria-label="Routine actions">
-        <button type="button" className="pill-btn pill-accent" onClick={onAdd}>
-          <IconPlus /> Activity
+        <button type="button" className="pill-btn pill-accent" onClick={onAdd} aria-label="Add activity">
+          <IconPlus /> <span className="pill-label">Activity</span>
         </button>
 
-        <Menu label={<><IconShare /> Share</>} width={19}>
+        <Menu label={<><IconShare /> <span className="pill-label">Share</span></>} ariaLabel="Share" width={19}>
           {(close) => (
             <>
               <div className="menu-section">
@@ -142,15 +142,21 @@ export default function Toolbar({
           )}
         </Menu>
 
-        <button type="button" className="pill-btn" onClick={() => fileRef.current?.click()}>
-          <IconImport /> Import
+        <button type="button" className="pill-btn" onClick={() => fileRef.current?.click()} aria-label="Import a routine">
+          <IconImport /> <span className="pill-label">Import</span>
         </button>
 
-        <button type="button" className="pill-btn" onClick={onPrint} title={`Print or save as PDF (${shortcut('P')})`}>
-          <IconPrint /> Print
+        <button
+          type="button"
+          className="pill-btn"
+          onClick={onPrint}
+          aria-label="Print"
+          title={`Print or save as PDF (${shortcut('P')})`}
+        >
+          <IconPrint /> <span className="pill-label">Print</span>
         </button>
 
-        <Menu label={<><IconClock /> Hours</>} width={17}>
+        <Menu label={<><IconClock /> <span className="pill-label">Hours</span></>} ariaLabel="Hours and days" width={17}>
           {() => <SettingsPanel settings={settings} onChange={onSettingsChange} />}
         </Menu>
 
@@ -158,10 +164,11 @@ export default function Toolbar({
           type="button"
           className="pill-btn pill-danger"
           onClick={onClear}
+          aria-label="Clear all activities"
           disabled={activityCount === 0}
           title="Remove every activity"
         >
-          <IconTrash /> Clear
+          <IconTrash /> <span className="pill-label">Clear</span>
         </button>
       </div>
 

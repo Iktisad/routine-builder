@@ -22,7 +22,9 @@ describe('App initial render', () => {
     expect(html).not.toContain('time-label')
     expect(html).not.toContain('7 AM')
     expect(html).not.toContain('11 PM')
-    expect(html).toContain('--gutter-w:0rem')
+    // The gutter keeps its width even while bare — collapsing it slid every
+    // column sideways when the first activity arrived. Nothing is drawn in it.
+    expect(html).toContain('--gutter-w:4.25rem')
     expect(html).toContain('data-bare=\"true\"')
   })
 
@@ -37,8 +39,9 @@ describe('App initial render', () => {
     expect(html).toContain('Nothing is stored in your browser')
   })
 
-  it('starts with nothing unsaved and export disabled', () => {
+  it('starts clean, with the Share action available', () => {
     expect(html).toContain('>Saved<')
-    expect(html).toMatch(/Export/)
+    // Export lives inside the Share menu now, so only the trigger renders.
+    expect(html).toMatch(/Share/)
   })
 })

@@ -262,6 +262,9 @@ body {
 .grid-scroll {
   height: auto;
   max-height: 100%;
+  /* Flex items default to min-width:auto and refuse to shrink below their
+     content — the classic cause of a stubborn horizontal page scrollbar. */
+  min-width: 0;
   overflow: auto;
   /* Reserve the vertical scrollbar so its appearing cannot flip the width,
      and with it the horizontal scrollbar the fit calculation measures. */
@@ -345,7 +348,9 @@ body {
   position: relative;
   height: calc(var(--span-hours) * var(--hour-px));
   border-left: 1px solid var(--border);
-  touch-action: none;
+  /* Empty grid must stay pannable on touch — drag-to-create is mouse-only.
+     Cards and the resize handle keep touch-action: none so they still drag. */
+  touch-action: pan-x pan-y;
 }
 
 /* Rules are drawn only at labelled boundaries — see DayColumn. */
@@ -533,6 +538,7 @@ dialog.sheet {
   width: calc(100vw - 2rem);
   max-width: 29rem;
   max-height: calc(100vh - 2rem);
+  overflow-y: auto;
   border: 1px solid var(--border-strong);
   border-radius: 14px;
   background: var(--surface);
@@ -782,3 +788,131 @@ dialog.sheet::backdrop { background: rgb(17 19 23 / 0.38); }
 }
 
 @media print { .menu-popover { display: none !important; } }
+
+/* ---------------------------------------------------------------------------
+   Responsive. Two breakpoints:
+
+   Tablet narrows the columns so all seven days still fit without scrolling.
+   Phone widens them again and lets the grid scroll sideways instead — the
+   goals differ, so the numbers run in opposite directions on purpose.
+   --------------------------------------------------------------------------- */
+
+.app-shell { min-width: 0; }
+.app-shell > main { min-width: 0; }
+
+@media (max-width: 900px) {
+  :root { --day-min: 5.5rem; }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --day-min: 6.5rem;
+    --hour-px: 48px;
+  }
+
+  .app-shell { padding: 0.6rem !important; gap: 0.6rem; }
+
+  /* Name on its own row, pill beneath it. */
+  .routine-name { flex: 1 1 100%; max-width: none; }
+
+  .btn-pill { margin-left: 0; width: 100%; justify-content: space-between; }
+  .menu-anchor { flex: 1; }
+
+  /* Icon-only: the label stays in the accessibility tree, just not on screen. */
+  .pill-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .menu-caret { display: none; }
+
+  .pill-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.7rem 0.5rem;
+  }
+  .btn-pill > :first-child .pill-btn,
+  .btn-pill > :last-child .pill-btn { padding-left: 0.6rem; padding-right: 0.6rem; }
+
+
+  /* Anchoring a 19rem popover to a trigger near the screen edge has nowhere
+     good to go; a bottom sheet sidesteps the geometry entirely. */
+  .menu-popover {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: auto !important;
+    max-width: none;
+    max-height: 72vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    border-bottom: 0;
+    animation: sheet-in 160ms cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+
+  @keyframes sheet-in {
+    from { transform: translateY(100%); }
+    to { transform: none; }
+  }
+
+  .toast-layer { right: 0.6rem; left: 0.6rem; bottom: 0.6rem; }
+  .toast { max-width: none; width: 100%; }
+
+  dialog.sheet { width: calc(100vw - 1.2rem); }
+  /* The day / start / end row cramps badly at this width. */
+  .dialog-times { grid-template-columns: 1fr !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-popover { animation: none; }
+}
+
+/* Touch targets follow the pointing device rather than the viewport: a tablet
+   and a landscape phone are both fingers on glass, whatever their width. */
+@media (hover: none) and (pointer: coarse) {
+  .pill-btn { min-width: 44px; min-height: 44px; }
+  .chip { min-height: 44px; padding: 0.6rem 0.85rem; }
+  .swatch { width: 2.4rem; height: 2.4rem; }
+  .field { min-height: 44px; }
+  .menu-item { min-height: 44px; }
+  .resize-handle { height: 14px; }
+}
+
+/* Empty-state guidance, floating over the bare canvas. `pointer-events: none`
+   on the backdrop keeps drag-to-create working straight through it. */
+.empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.empty-hint-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 24rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  pointer-events: auto;
+  text-align: center;
+}
+
+.empty-hint-text {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
